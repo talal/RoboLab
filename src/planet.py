@@ -23,6 +23,52 @@ Value:  -1 if blocked path
         never 0
 """
 
+BLOCKED_PATH = -1
+
+
+class Path:
+    def __init__(self, start: Tuple[Tuple[int, int], Direction], end: Tuple[Tuple[int, int], Direction],
+                 weight: int):
+        self.start = start
+        self.end = end
+        self.weight = weight
+
+    def as_tuple(self):
+        return self.start, self.end, self.weight
+
+
+class Node:
+    def __init__(self, x_coordinate: int, y_coordinate: int):
+        self.coordinates = x_coordinate, y_coordinate
+
+        # path array to each direction
+
+        self.path_to_north = None
+        self.path_to_west = None
+        self.path_to_east = None
+        self.path_to_south = None
+
+    def add_path(self, direction: Direction, path: Path):
+        if direction == Direction.NORTH:
+            self.path_to_north = path
+        elif direction == Direction.WEST:
+            self.path_to_west = path
+        elif direction == Direction.EAST:
+            self.path_to_east = path
+        else:
+            self.path_to_south = path
+
+    def get_paths(self) -> Dict[Direction, Tuple[Tuple[int, int], Direction, Weight]]:
+
+        all_paths = dict()
+
+        all_paths[Direction.NORTH] = self.path_to_north
+        all_paths[Direction.WEST] = self.path_to_west
+        all_paths[Direction.EAST] = self.path_to_east
+        all_paths[Direction.SOUTH] = self.path_to_south
+
+        return all_paths
+
 
 class Planet:
     """
@@ -32,6 +78,11 @@ class Planet:
 
     def __init__(self):
         """ Initializes the data structure """
+
+        # contains all nodes of the planet
+        self.nodes = set()
+
+        # the target point provided by the mothership
         self.target = None
 
     def add_path(self, start: Tuple[Tuple[int, int], Direction], target: Tuple[Tuple[int, int], Direction],
@@ -48,7 +99,9 @@ class Planet:
         """
 
         # YOUR CODE FOLLOWS (remove pass, please!)
-        pass
+
+        new_path = Path(start, target, weight)
+        self.nodes.add(new_path)
 
     def get_paths(self) -> Dict[Tuple[int, int], Dict[Direction, Tuple[Tuple[int, int], Direction, Weight]]]:
         """
@@ -70,10 +123,15 @@ class Planet:
         """
 
         # YOUR CODE FOLLOWS (remove pass, please!)
-        pass
 
-    def shortest_path(self, start: Tuple[int, int], target: Tuple[int, int]) -> Optional[
-        List[Tuple[Tuple[int, int], Direction]]]:
+        all_paths = dict()
+
+        for node in self.nodes:
+            all_paths[node.coordinates] = node.get_paths()
+
+        return all_paths
+
+    def shortest_path(self, start: Tuple[int, int], target: Tuple[int, int]) -> Optional[List[Tuple[Tuple[int, int], Direction]]]:
         """
         Returns a shortest path between two nodes
 
