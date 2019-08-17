@@ -73,7 +73,7 @@ class RoboLabPlanetTests(unittest.TestCase):
         """
         This test should check that a target outside the map or at an unexplored node is not reachable
         """
-        self.fail('implement me!')
+        self.fail()
 
     def test_same_length(self):
         """
@@ -102,6 +102,18 @@ class RoboLabPlanetTests(unittest.TestCase):
         """
         self.fail('implement me!')
 
+    def test_measure_direction(self):
+        direction = self.planet.measure_direction(5, 7, 1, 10)
+        self.assertEqual(direction, Direction.WEST)
+
+        direction = self.planet.measure_direction(1, 1, 9, 1)
+        self.assertEqual(direction, Direction.EAST)
+
+        direction = self.planet.measure_direction(1, 1, 2, 10)
+        self.assertEqual(direction, Direction.NORTH)
+
+        direction = self.planet.measure_direction(1, 10, 2, 1)
+        self.assertEqual(direction, Direction.SOUTH)
 
 if __name__ == "__main__":
     unittest.main()

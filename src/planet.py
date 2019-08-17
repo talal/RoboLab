@@ -4,6 +4,8 @@
 from enum import Enum, unique
 from typing import List, Optional, Tuple, Dict
 
+import random
+
 
 @unique
 class Direction(Enum):
@@ -23,7 +25,11 @@ Value:  -1 if blocked path
         never 0
 """
 
+# constants
+
 BLOCKED_PATH = -1
+DIRECTION_VERTICAL = 1
+DIRECTION_HORIZONTAL = 2
 
 
 class Path:
@@ -131,7 +137,80 @@ class Planet:
 
         return all_paths
 
-    def shortest_path(self, start: Tuple[int, int], target: Tuple[int, int]) -> Optional[List[Tuple[Tuple[int, int], Direction]]]:
+    @staticmethod
+    def get_random_direction(direction_type: int):
+
+        if direction_type == DIRECTION_VERTICAL:
+            if random.randint(0, 1) == 0:
+                return Direction.SOUTH
+            else:
+                return Direction.NORTH
+        elif direction_type == DIRECTION_HORIZONTAL:
+            if random.randint(0, 1) == 0:
+                return Direction.WEST
+            else:
+                return Direction.EAST
+        else:
+            raise Exception("direction_type is not DIRECTION_VERTICAL or DIRECTION_HORIZONTAL")
+
+    def measure_direction(self, node_x: int, node_y: int, target_x: int, target_y: int) -> Direction:
+
+        distance_x = abs(node_x - target_x)
+        distance_y = abs(node_y - target_y)
+
+        if distance_x > distance_y:
+            if node_x < target_x:
+                direction = Direction.EAST
+            elif node_x > target_x:
+                direction = Direction.WEST
+            else:
+                direction = self.get_random_direction(DIRECTION_VERTICAL)
+
+        elif distance_y > distance_x:
+            if node_y < target_y:
+                direction = Direction.NORTH
+            elif node_y > target_y:
+                direction = Direction.SOUTH
+            else:
+                direction = self.get_random_direction(DIRECTION_HORIZONTAL)
+        else:
+            direction = self.get_random_direction(DIRECTION_HORIZONTAL)
+
+        return direction
+
+    def get_direction_to_go(self, node_x: int, node_y: int, target_x: int, target_y: int,
+                            direction: Direction) -> Direction:
+
+        direction_to_go = self.dijkstra((node_x, node_y), (target_x, target_y))
+        if direction_to_go is None:
+            direction_to_go = self.measure_direction(node_x, node_y, target_x, target_y)
+
+        return direction_to_go
+
+    def dijkstra(self, start, goal):
+        shortest_distance = {}  # stores the minimum cost to reach that node
+        track_visited_nodes = {}  # showes the path, that got us to this node
+        not_seen_nodes = self.nodes.copy()
+        pretty_big_number = 100000  # big number on unvisited nodes
+        path = []  # optimal route
+
+        start_node = Node(start)
+
+        for node in not_seen_nodes:
+            shortest_distance[node] = pretty_big_number
+        shortest_distance[start] = 0
+
+        while not_seen_nodes:
+            min_distance_node = None
+
+            for node in not_seen_nodes:
+                if min_distance_node is None:
+                    min_distance_node = node
+                elif shortest_distance[node] < shortest_distance[min_distance_node]:
+                    min_distance_node = node
+
+    def shortest_path(self, start: Tuple[int, int], target: Tuple[int, int]) -> Optional[
+        List[Tuple[Tuple[int, int], Direction]]]:
         """
         Returns a shortest path between two nodes
 
@@ -143,5 +222,22 @@ class Planet:
         :return: 2-Tuple[List, Direction]
         """
 
-        # YOUR CODE FOLLOWS (remove pass, please!)
-        pass
+        result = []
+
+        """
+        openList: Dict<Tuple<int, int>, Tuple<Tuple<int, int>, int>
+        
+        while (true)
+        
+        best = (0, 0)
+        
+        for (key in openList)
+            if (openList[key].y < minVal)
+                best = key
+                minVal = openList[best].y
+        
+        
+        
+        """
+
+        return result
