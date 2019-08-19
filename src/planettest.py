@@ -48,6 +48,10 @@ class RoboLabPlanetTests(unittest.TestCase):
         # Initialize your data structure here
         self.planet = Planet()
         # self.planet.add_path(...)
+        self.planet.add_path((0, 0), (1, 0), 1)
+        self.planet.add_path((1, 0), (1, 1), 2)
+        self.planet.add_path((1, 1), (0, 1), 3)
+        self.planet.add_path((0, 1), (0, 0), 4)
 
     def test_integrity(self):
         """
@@ -67,13 +71,18 @@ class RoboLabPlanetTests(unittest.TestCase):
 
         Requirement: Minimum distance is three nodes (two paths in list returned)
         """
-        self.fail('implement me!')
+
+        direction = self.planet.get_direction_to_go(0, 0, 1, 1)
+
 
     def test_target_not_reachable(self):
         """
         This test should check that a target outside the map or at an unexplored node is not reachable
         """
-        self.fail()
+
+        self.planet.add_path((10, 10), (20, 20), 10)
+
+        self.assertEqual(None, self.planet.shortest_path((0, 0), (20, 20)))
 
     def test_same_length(self):
         """
@@ -91,7 +100,9 @@ class RoboLabPlanetTests(unittest.TestCase):
 
         Result: Target is reachable
         """
-        self.fail('implement me!')
+        self.planet.add_path((10, 10), (20, 20), 10)
+
+        self.assertNotEqual(None, self.planet.shortest_path((0, 0), (1, 1)))
 
     def test_target_not_reachable_with_loop(self):
         """
@@ -114,6 +125,7 @@ class RoboLabPlanetTests(unittest.TestCase):
 
         direction = self.planet.measure_direction(1, 10, 2, 1)
         self.assertEqual(direction, Direction.SOUTH)
+
 
 if __name__ == "__main__":
     unittest.main()

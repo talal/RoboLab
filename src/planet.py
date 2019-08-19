@@ -3,6 +3,7 @@
 # Attention: Do not import the ev3dev.ev3 module in this file
 from enum import Enum, unique
 from typing import List, Optional, Tuple, Dict
+import math
 
 import random
 
@@ -40,7 +41,7 @@ class Path:
         self.weight = weight
 
     def as_tuple(self):
-        return self.start, self.end, self.weight
+        return (self.start, self.end), self.weight
 
 
 class Node:
@@ -107,6 +108,10 @@ class Planet:
         # YOUR CODE FOLLOWS (remove pass, please!)
 
         new_path = Path(start, target, weight)
+
+        if new_path in self.nodes:
+            return
+
         self.nodes.add(new_path)
 
     def get_paths(self) -> Dict[Tuple[int, int], Dict[Direction, Tuple[Tuple[int, int], Direction, Weight]]]:
@@ -174,20 +179,27 @@ class Planet:
             else:
                 direction = self.get_random_direction(DIRECTION_HORIZONTAL)
         else:
-            direction = self.get_random_direction(DIRECTION_HORIZONTAL)
+            if target_y > node_y:
+                direction = Direction.NORTH
+            elif target_x > node_x:
+                direction = Direction.EAST
+            elif node_x > target_x:
+                direction = Direction.WEST
+            elif node_y > target_y:
+                direction = Direction.SOUTH
 
         return direction
 
-    def get_direction_to_go(self, node_x: int, node_y: int, target_x: int, target_y: int,
-                            direction: Direction) -> Direction:
+    def get_direction_to_go(self, node_x: int, node_y: int, target_x: int, target_y: int) -> Direction:
 
-        direction_to_go = self.dijkstra((node_x, node_y), (target_x, target_y))
+        direction_to_go = self.shortest_path((node_x, node_y), (target_x, target_y))
         if direction_to_go is None:
             direction_to_go = self.measure_direction(node_x, node_y, target_x, target_y)
 
         return direction_to_go
 
     def dijkstra(self, start, goal):
+
         shortest_distance = {}  # stores the minimum cost to reach that node
         track_visited_nodes = {}  # showes the path, that got us to this node
         not_seen_nodes = self.nodes.copy()
@@ -222,22 +234,59 @@ class Planet:
         :return: 2-Tuple[List, Direction]
         """
 
-        result = []
+        unvisited = self.nodes.copy()
+        visited = dict()
 
-        """
-        openList: Dict<Tuple<int, int>, Tuple<Tuple<int, int>, int>
-        
-        while (true)
-        
-        best = (0, 0)
-        
-        for (key in openList)
-            if (openList[key].y < minVal)
-                best = key
-                minVal = openList[best].y
-        
-        
-        
-        """
+        # predecessor
+        pred = {start: None}
+        start = Node(start[0], start[1])
 
-        return result
+        for node in self.nodes:
+            if node == start:
+                start = node
+
+        while unvisited:
+            min: Node = None
+            for node in unvisited:
+                if node in visited:
+                    # could be an error
+                    if min is None or visited[node] < visited[min]:
+                        min = node
+            if min is None:
+                break
+            unvisited.remove(min)
+            current_weight = visited[min]
+
+            paths = [min.path_to_north, min.path_to_east, min.path_to_west, min.path_to_south]
+            i = 0
+            for path in paths:
+
+                direction = None
+                if i == 0:
+                    direction = Direction.NORTH
+                elif i == 1:
+                    direction = Direction.EAST
+                elif i == 2:
+                    direction = Direction.WEST
+                elif i == 3:
+                    direction = Direction.SOUTH
+
+                if path.weight == BLOCKED_PATH:
+                    continue
+
+                weight = current_weight + path.weight
+                if path.end not in visited or weight < visited[path.end]:
+                    visited[path.end] = weight
+                    pred[path.end[0]] = (min.coordinates, direction, current_weight)
+
+                i += 1
+
+        shortest_path = None
+        if target in pred:
+            shortest_path = []
+            node = target
+            while pred[node] is not None:
+                shortest_path.insert(0, pred[node][0:2])
+                node = pred[node][0]
+
+        return shortest_path
