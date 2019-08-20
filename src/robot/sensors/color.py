@@ -16,13 +16,11 @@ class Color(IntEnum):
     BROWN = 7
 
 
-# TODO: get more precise values for blue and red
-# current ones are taken from an online rgb value converter
 @unique
 class RGBColor(Enum):
     UNKNOWN = (0, 0, 0)
-    BLUE = (19, 25, 213)
-    RED = (213, 19, 19)
+    BLUE = (33, 120, 94)
+    RED = (138, 51, 24)
 
 
 class ColorSensor:
