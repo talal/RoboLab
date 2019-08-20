@@ -26,18 +26,37 @@ class RGBColor(Enum):
 class ColorSensor:
     def __init__(self):
         self.sensor = ev3.ColorSensor(ev3.INPUT_2)
+        self.sensor.mode = self.sensor.MODE_RGB_RAW
+
+    def set_col_color_mode(self):
+        self.sensor.mode = self.sensor.MODE_COL_COLOR
 
     def get_color(self) -> Color:
-        self.sensor.mode = self.sensor.MODE_COL_COLOR
-        return Color(self.sensor.value())
+        if self.sensor.mode == self.sensor.MODE_COL_COLOR:
+            return Color(self.sensor.value())
+        else:
+            raise Exception(
+                f"expected sensor mode to be {self.sensor.MODE_COL_COLOR}, got {self.sensor.mode}"
+            )
 
-    def get_rgb_raw(self) -> Tuple[int, int, int]:
+    def set_rgb_raw_mode(self):
         self.sensor.mode = self.sensor.MODE_RGB_RAW
-        return self.sensor.bin_data("hhh")
 
-    def get_reflected_light_intensity(self) -> int:
-        self.sensor.mode = self.sensor.MODE_COL_REFLECT
-        return self.sensor.value()
+    def __get_rgb_raw(self) -> Tuple[int, int, int]:
+        if self.sensor.mode == self.sensor.MODE_RGB_RAW:
+            return self.sensor.bin_data("hhh")
+        else:
+            raise Exception(
+                f"expected sensor mode to be {self.sensor.MODE_RGB_RAW}, got {self.sensor.mode}"
+            )
+
+    def get_reflected_color_intensity(self) -> int:
+        if self.sensor.mode == self.sensor.MODE_RGB_RAW:
+            return self.sensor.value()
+        else:
+            raise Exception(
+                f"expected sensor mode to be {self.sensor.MODE_RGB_RAW}, got {self.sensor.mode}"
+            )
 
     def get_rgb_color(self) -> RGBColor:
         e = 20  # error margin
@@ -47,7 +66,7 @@ class ColorSensor:
             and (known[2] - e) < given[2] < (known[2] + e)
         )
 
-        rgb_raw_value = self.get_rgb_raw()
+        rgb_raw_value = self.__get_rgb_raw()
         for c in RGBColor:
             if compare_rgb_values(rgb_raw_value, c.value):
                 return c
