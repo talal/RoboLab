@@ -19,8 +19,8 @@ class Color(IntEnum):
 @unique
 class RGBColor(Enum):
     UNKNOWN = (0, 0, 0)
-    BLUE = (33, 120, 94)
-    RED = (138, 51, 24)
+    BLUE = (53, 151, 146)
+    RED = (197, 73, 42)
 
 
 class ColorSensor:
@@ -42,7 +42,7 @@ class ColorSensor:
     def set_rgb_raw_mode(self):
         self.sensor.mode = self.sensor.MODE_RGB_RAW
 
-    def __get_rgb_raw(self) -> Tuple[int, int, int]:
+    def get_rgb_raw(self) -> Tuple[int, int, int]:
         if self.sensor.mode == self.sensor.MODE_RGB_RAW:
             return self.sensor.bin_data("hhh")
         else:
@@ -66,7 +66,7 @@ class ColorSensor:
             and (known[2] - e) < given[2] < (known[2] + e)
         )
 
-        rgb_raw_value = self.__get_rgb_raw()
+        rgb_raw_value = self.get_rgb_raw()
         for c in RGBColor:
             if compare_rgb_values(rgb_raw_value, c.value):
                 return c
