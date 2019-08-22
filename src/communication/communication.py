@@ -1,7 +1,10 @@
 import json
 from enum import Enum, unique
+from typing import Tuple
 
 from paho.mqtt.client import connack_string
+
+from planet import Direction
 
 
 @unique
@@ -19,6 +22,12 @@ class MessageType(Enum):
     TARGET = "target"
     TARGET_REACHED = "targetReached"
     TESTPLANET = "testplanet"
+
+
+@unique
+class PathStatus(Enum):
+    BLOCKED = "blocked"
+    FREE = "free"
 
 
 class Communication:
@@ -44,10 +53,13 @@ class Communication:
         self.username = "217"
         self.password = "H8zbos646n"
         self.message_queue = list()
+        self.explorer_topic = f"explorer/{self.username}"
+        self.planet_name = ""
+        self.planet_topic = ""
 
         self.client.username_pw_set(self.username, password=self.password)
         self.client.connect("mothership.inf.tu-dresden.de", 1883)
-        self.subscribe_to_topic(f"explorer/{self.username}")
+        self.subscribe_to_topic(self.explorer_topic)
         self.client.loop_start()
 
     #  ====================  Callbacks  ====================  #
@@ -61,10 +73,10 @@ class Communication:
         :param message: Object
         :return: void
         """
-        payload = json.loads(message.payload.decode("utf-8"))
-        if payload["from"] == "server":
-            self.message_queue.append(payload)
-        self.logger.debug(json.dumps(payload, indent=2))
+        msg = json.loads(message.payload.decode("utf-8"))
+        if msg["from"] == "server":
+            self.message_queue.append(msg)
+        self.logger.debug(json.dumps(msg, indent=2))
 
     # DO NOT EDIT THE METHOD SIGNATURE OR BODY
     #
@@ -115,8 +127,68 @@ class Communication:
         :param message: Object
         :return: void
         """
-        self.logger.debug("Send to: " + topic)
+        self.logger.debug(f"Send to {topic}")
         self.logger.debug(json.dumps(message, indent=2))
 
-        # YOUR CODE FOLLOWS (remove pass, please!)
-        pass
+        if self.client and topic != "":
+            self.client.publish(topic, payload=message, qos=1)
+        else:
+            raise Exception(f"Failed to publish the message, check logs")
+
+    def send_ready_message(self):
+        msg = {"from": "client", "type": MessageType.READY.value}
+        return self.send_message(self.explorer_topic, json.dumps(msg))
+
+    def send_testplanet_message(self, planet_name):
+        msg = {
+            "from": "client",
+            "type": MessageType.TESTPLANET.value,
+            "payload": {"planetName": planet_name},
+        }
+        return self.send_message(self.explorer_topic, json.dumps(msg))
+
+    def send_path_message(
+        self, start: Tuple[int, int, Direction], end: Tuple[int, int, Direction], status: PathStatus
+    ):
+        msg = {
+            "from": "client",
+            "type": MessageType.PATH.value,
+            "payload": {
+                "startX": str(start[0]),
+                "startY": str(start[1]),
+                "startDirection": start[2].value,
+                "endX": str(end[0]),
+                "endY": str(end[1]),
+                "endDirection": end[2].value,
+                "pathStatus": status.value,
+            },
+        }
+        return self.send_message(self.planet_topic, json.dumps(msg))
+
+    def send_path_select_message(self, start: Tuple[int, int, Direction]):
+        msg = {
+            "from": "client",
+            "type": MessageType.PATH_SELECT.value,
+            "payload": {
+                "startX": str(start[0]),
+                "startY": str(start[1]),
+                "startDirection": start[2].value,
+            },
+        }
+        return self.send_message(self.planet_topic, json.dumps(msg))
+
+    def send_target_reached_message(self):
+        msg = {
+            "from": "client",
+            "type": MessageType.TARGET_REACHED.value,
+            "payload": {"message": "Reached target!"},
+        }
+        return self.send_message(self.explorer_topic, json.dumps(msg))
+
+    def send_exploration_completed_message(self):
+        msg = {
+            "from": "client",
+            "type": MessageType.EXPLORATION_COMPLETED.value,
+            "payload": {"message": "Exploration complete!"},
+        }
+        return self.send_message(self.explorer_topic, json.dumps(msg))
