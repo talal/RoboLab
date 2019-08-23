@@ -4,7 +4,7 @@ from typing import Tuple
 
 from paho.mqtt.client import connack_string
 
-from planet import Direction
+from planet.planet import Direction
 
 
 @unique
@@ -148,31 +148,34 @@ class Communication:
         return self.send_message(self.explorer_topic, json.dumps(msg))
 
     def send_path_message(
-        self, start: Tuple[int, int, Direction], end: Tuple[int, int, Direction], status: PathStatus
+        self,
+        start: Tuple[Tuple[int, int], Direction],
+        end: Tuple[Tuple[int, int], Direction],
+        status: PathStatus,
     ):
         msg = {
             "from": "client",
             "type": MessageType.PATH.value,
             "payload": {
-                "startX": str(start[0]),
-                "startY": str(start[1]),
-                "startDirection": start[2].value,
-                "endX": str(end[0]),
-                "endY": str(end[1]),
-                "endDirection": end[2].value,
+                "startX": str(start[0][0]),
+                "startY": str(start[0][1]),
+                "startDirection": start[1].value,
+                "endX": str(end[0][0]),
+                "endY": str(end[0][1]),
+                "endDirection": end[1].value,
                 "pathStatus": status.value,
             },
         }
         return self.send_message(self.planet_topic, json.dumps(msg))
 
-    def send_path_select_message(self, start: Tuple[int, int, Direction]):
+    def send_path_select_message(self, start: Tuple[Tuple[int, int], Direction]):
         msg = {
             "from": "client",
             "type": MessageType.PATH_SELECT.value,
             "payload": {
-                "startX": str(start[0]),
-                "startY": str(start[1]),
-                "startDirection": start[2].value,
+                "startX": str(start[0][0]),
+                "startY": str(start[0][1]),
+                "startDirection": start[1].value,
             },
         }
         return self.send_message(self.planet_topic, json.dumps(msg))
