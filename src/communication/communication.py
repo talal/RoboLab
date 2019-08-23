@@ -195,3 +195,38 @@ class Communication:
             "payload": {"message": "Exploration complete!"},
         }
         return self.send_message(self.explorer_topic, json.dumps(msg))
+
+    #  ====================  Message Handling  ====================  #
+
+    def handle(self):
+        msg = self.message_queue.pop(0)
+        print(json.dumps(msg, indent=2))  # TODO: remove this before final push
+        if msg["from"] == "debug":
+            return
+
+        msg_type = MessageType(msg["type"])
+        payload = msg["payload"]
+
+        if msg_type == MessageType.PLANET:
+            name = payload["planetName"]
+            self.planet_topic = f"planet/{name}/{self.username}"
+            self.subscribe_to_topic(self.planet_topic)
+            return msg_type, ((payload["startX"], payload["startY"]), Direction.NORTH)
+
+        if msg_type == MessageType.TARGET:
+            return msg_type, ((payload["targetX"], payload["targetY"]), None)
+
+        if msg_type == MessageType.PATH_SELECT:
+            return msg_type, Direction(payload["startDirection"])
+
+        if (msg_type == MessageType.PATH) or (msg_type == MessageType.PATH_UNVEILED):
+            return (
+                msg_type,
+                ((payload["startX"], payload["startY"]), Direction(payload["startDirection"])),
+                ((payload["endX"], payload["endY"]), Direction(payload["endDirection"])),
+                PathStatus(payload["pathStatus"]),
+                payload["pathWeight"],
+            )
+
+        if msg_type == MessageType.DONE:
+            return msg_type, payload["message"]
