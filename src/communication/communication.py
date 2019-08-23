@@ -74,7 +74,7 @@ class Communication:
         :return: void
         """
         msg = json.loads(message.payload.decode("utf-8"))
-        if msg["from"] == "server":
+        if msg["from"] != "client":
             self.message_queue.append(msg)
         self.logger.debug(json.dumps(msg, indent=2))
 
