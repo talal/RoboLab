@@ -14,6 +14,12 @@ class Direction(Enum):
     WEST = "W"
 
 
+@unique
+class PathStatus(Enum):
+    BLOCKED = "blocked"
+    FREE = "free"
+
+
 # simple alias, no magic here
 Weight = int
 """ 

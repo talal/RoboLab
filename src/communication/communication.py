@@ -4,7 +4,7 @@ from typing import Tuple
 
 from paho.mqtt.client import connack_string
 
-from planet.planet import Direction
+from planet.planet import Direction, PathStatus
 
 
 @unique
@@ -22,12 +22,6 @@ class MessageType(Enum):
     TARGET = "target"
     TARGET_REACHED = "targetReached"
     TESTPLANET = "testplanet"
-
-
-@unique
-class PathStatus(Enum):
-    BLOCKED = "blocked"
-    FREE = "free"
 
 
 class Communication:
