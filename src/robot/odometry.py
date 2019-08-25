@@ -3,7 +3,13 @@ from typing import Tuple, List
 
 from logger import get_logger
 from robot.sensors.color import RGBColor
-from utils.common import Direction, PathStatus, direction_to_degrees, flip_direction
+from utils.common import (
+    Direction,
+    PathStatus,
+    direction_to_degrees,
+    flip_direction,
+    degrees_to_nearest_direction,
+)
 
 
 class Odometry:
@@ -85,13 +91,6 @@ class Odometry:
     def __degree_to_radian(degree):
         return round((degree / 57.29578), 3)
 
-    @staticmethod
-    def __get_nearest_direction(angle: int) -> Direction:
-        angle /= 90
-        angle %= 4
-        angle = round(angle)
-        return {0: Direction.NORTH, 1: Direction.WEST, 2: Direction.SOUTH, 3: Direction.EAST}[angle]
-
     def __position_to_d(self, position):
         return (position / 360) * math.pi * self.wheel_diameter
 
@@ -113,22 +112,23 @@ class Odometry:
         return (math.cos(old_gamma + beta)) * s
 
     def handle(
-        self, node_color: RGBColor, path_status: PathStatus, positions_list: List[Tuple[int, int]]
+        self,
+        current_direction: Direction,
+        path_status: PathStatus,
+        positions_list: List[Tuple[int, int]],
     ):
         self.previous_node_color = self.current_node_color
         self.previous_coordinates = self.current_coordinates
         self.previous_direction = self.current_direction
         self.logger.debug(
-            f"Odometry: previous direction={self.previous_direction}, -coordinates={self.previous_coordinates}, -node color={self.previous_node_color}"
-        )
-        print(
-            f"Odometry: previous direction={self.previous_direction}, -coordinates={self.previous_coordinates}, -node color={self.previous_node_color}"
+            f"Odometry: previous direction={self.previous_direction} and coordinates={self.previous_coordinates}"
         )
 
         if path_status == PathStatus.BLOCKED:
             self.current_direction = flip_direction(self.current_direction)
+            return
 
-        gamma = 0
+        gamma = self.__degree_to_radian(direction_to_degrees(current_direction))
         delta_x = 0
         delta_y = 0
         for i, positions in enumerate(positions_list):
@@ -150,31 +150,16 @@ class Odometry:
 
         previous_direction_degrees = direction_to_degrees(self.previous_direction)
         new_direction_degrees = self.__radian_to_degree(gamma) + previous_direction_degrees
-        new_direction = self.__get_nearest_direction(new_direction_degrees)
+        new_direction = degrees_to_nearest_direction(new_direction_degrees)
 
-        previous_direction_radian = self.__degree_to_radian(previous_direction_degrees)
-        if (self.previous_direction == Direction.EAST) or (
-            self.previous_direction == Direction.WEST
-        ):
-            previous_direction_degrees *= -1
-        dx_r = (delta_x * math.cos(previous_direction_radian)) - (
-            delta_y * math.sin(previous_direction_radian)
-        )
-        dy_r = (delta_x * math.sin(previous_direction_degrees)) + (
-            delta_y * math.cos(previous_direction_radian)
-        )
         new_coordinates = (
-            round(self.previous_coordinates[0] + (dx_r / self.planet_grid_unit)),
-            round(self.previous_coordinates[1] + (dy_r / self.planet_grid_unit)),
+            round(self.previous_coordinates[0] + (delta_x / self.planet_grid_unit)),
+            round(self.previous_coordinates[1] + (delta_y / self.planet_grid_unit)),
         )
 
-        self.current_node_color = node_color
         self.current_coordinates = new_coordinates
         self.current_direction = new_direction
 
-        print(
-            f"Odometry: current direction={self.current_direction}, -coordinates={self.current_coordinates}, -node color={self.current_node_color}"
-        )
         self.logger.debug(
-            f"Odometry: current direction={self.current_direction}, -coordinates={self.current_coordinates}, -node color={self.current_node_color}"
+            f"Odometry: current direction={self.current_direction} and coordinates={self.current_coordinates}"
         )
