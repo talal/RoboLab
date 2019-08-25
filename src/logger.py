@@ -9,6 +9,5 @@ logging.basicConfig(
     format="%(asctime)s: %(message)s",  # Define default logging format
 )
 
-
 def get_logger(name):
     return logging.getLogger(name)

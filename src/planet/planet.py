@@ -1,24 +1,9 @@
 #!/usr/bin/env python3
-from enum import Enum, unique
-from typing import List, Optional, Tuple, Dict, Set
 import math
+from typing import List, Optional, Tuple, Dict, Set
 
 # IMPORTANT NOTE: DO NOT IMPORT THE ev3dev.ev3 MODULE IN THIS FILE
-
-@unique
-class Direction(Enum):
-    """ Directions in degrees """
-    NORTH = "N"
-    EAST = "E"
-    SOUTH = "S"
-    WEST = "W"
-
-
-@unique
-class PathStatus(Enum):
-    BLOCKED = "blocked"
-    FREE = "free"
-
+from utils.common import Direction
 
 # simple alias, no magic here
 Weight = int
@@ -37,7 +22,7 @@ class Planet:
 
     def __init__(self):
         """ Initializes the data structure """
-        self.target = None
+        self.target: Tuple[int, int] = None
         self.paths: Set[Tuple[Tuple[Tuple[int, int], Direction], Tuple[Tuple[int, int], Direction], Weight]] = set()
 
     def add_path(self, start: Tuple[Tuple[int, int], Direction], target: Tuple[Tuple[int, int], Direction],
@@ -54,7 +39,8 @@ class Planet:
         self.paths.add((start, target, weight))
         self.paths.add((target, start, weight))
 
-    def get_paths(self) -> Dict[Tuple[int, int], Dict[Direction, Tuple[Tuple[int, int], Direction, Weight]]]:
+    def get_paths(self) -> Dict[Tuple[int, int], Dict[
+        Direction, Tuple[Tuple[int, int], Direction, Weight]]]:
         """
         Returns all paths
         example:
