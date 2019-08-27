@@ -36,7 +36,6 @@ class Robot:
 
         # connect to mothership and initialize Odometry
         self.communication = Communication(mqtt_client)
-        self.communication.send_testplanet_message(planet_name="Coconut")  # TODO
         self.communication.send_ready_message()
         time.sleep(1)
         self.__process_message_queue()  # this will also set Odometry's start parameters
@@ -73,7 +72,6 @@ class Robot:
 
             target_direction = self.__get_target_direction()
             if not target_direction:
-                print("something went very wrong, check here")
                 self.communication.send_exploration_completed_message()
                 break
 
@@ -84,17 +82,13 @@ class Robot:
 
             if self.server_corrected_direction:
                 target_direction = self.server_corrected_direction
-                print(f"6 {target_direction}")
                 self.server_corrected_direction = None
 
-            print(f"final {target_direction}")
             if current_coordinates in self.blocked_paths:
-                print("target in blocked_paths")
                 if target_direction in self.blocked_paths[current_coordinates]:
                     if target_direction in self.scanned_directions[current_coordinates]:
                         i = self.scanned_directions[current_coordinates].index(target_direction)
                         del self.scanned_directions[current_coordinates][i]
-                        print("skipping")
                         continue
 
             if target_direction != self.odometry.current_direction:
@@ -129,6 +123,16 @@ class Robot:
                 flip_direction(self.odometry.current_direction),
             )
 
+            if path_status == PathStatus.BLOCKED:
+                if self.odometry.previous_coordinates in self.blocked_paths:
+                    self.blocked_paths[self.odometry.previous_coordinates].append(
+                        self.odometry.previous_direction
+                    )
+                else:
+                    self.blocked_paths[self.odometry.previous_coordinates] = [
+                        self.odometry.previous_direction
+                    ]
+
             # tell server about the travelled path
             self.communication.send_path_message(start, target, path_status)
             self.__process_message_queue()
@@ -153,7 +157,6 @@ class Robot:
             target_list = self.planet.shortest_path(current_coordinates, self.planet.target)
             if target_list:
                 t = target_list.pop(0)
-                print(f"1 {t[1]}")
                 return t[1]
 
         if self.temporary_target:
@@ -161,7 +164,6 @@ class Robot:
             target_list = self.planet.shortest_path(current_coordinates, target_coordinates)
             if target_list:
                 t = target_list.pop(0)
-                print(f"2 {t[1]}")
                 return t[1]
 
         if current_coordinates not in self.scanned_directions:
@@ -174,13 +176,11 @@ class Robot:
             if len(possible_directions) > 0:
                 self.unfinished_nodes.append(current_coordinates)
                 t = possible_directions.pop()
-                print(f"3 {t}")
                 return t
 
         possible_directions = self.scanned_directions[current_coordinates]
         if len(possible_directions) > 0:
             t = possible_directions.pop()
-            print(f"4 {t}")
             return t
         else:
             i = self.unfinished_nodes.index(current_coordinates)
@@ -191,7 +191,6 @@ class Robot:
             target_list = self.planet.shortest_path(current_coordinates, target_coordinates)
             if target_list:
                 t = target_list.pop(0)
-                print(f"5 {t[1]}")
                 return t[1]
 
     def __process_message_queue(self):

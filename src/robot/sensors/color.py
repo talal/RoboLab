@@ -16,9 +16,6 @@ class Color(IntEnum):
     BROWN = 7
 
 
-
-
-
 @unique
 class RGBColor(IntEnum):
     UNKNOWN = -1
@@ -52,7 +49,9 @@ class ColorSensor:
                 elif b.down:
                     s.beep()
                     s.beep()
-                    print(f"color calibration complete: BLUE={self.blue} and RED={self.red}, will start intensity calibration shortly")
+                    print(
+                        f"color calibration complete: BLUE={self.blue} and RED={self.red}, will start intensity calibration shortly"
+                    )
                     return
 
     def set_col_color_mode(self):

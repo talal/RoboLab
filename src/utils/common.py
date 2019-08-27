@@ -43,12 +43,11 @@ def direction_to_degrees(direction: Direction) -> int:
 
 
 def make_scanned_directions_relative(scanned_directions, current_direction):
-   return [
-        degrees_to_nearest_direction(
-            make_direction_relative(d, current_direction)
-        )
+    return [
+        degrees_to_nearest_direction(make_direction_relative(d, current_direction))
         for d in scanned_directions
     ]
+
 
 def make_direction_relative(direction, current_direction):
     opposite_direction = flip_direction(current_direction)

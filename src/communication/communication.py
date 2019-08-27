@@ -194,9 +194,10 @@ class Communication:
 
     def handle(self) -> Tuple[Any, ...]:
         msg = self.message_queue.pop(0)
-        print(json.dumps(msg, indent=2))  # TODO: remove this before final push
         if msg["from"] == "debug":
             return
+
+        print(json.dumps(msg, indent=2))
 
         msg_type = MessageType(msg["type"])
         payload = msg["payload"]
