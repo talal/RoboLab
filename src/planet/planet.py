@@ -23,10 +23,16 @@ class Planet:
     def __init__(self):
         """ Initializes the data structure """
         self.target: Tuple[int, int] = None
-        self.paths: Set[Tuple[Tuple[Tuple[int, int], Direction], Tuple[Tuple[int, int], Direction], Weight]] = set()
+        self.paths: Set[
+            Tuple[Tuple[Tuple[int, int], Direction], Tuple[Tuple[int, int], Direction], Weight]
+        ] = set()
 
-    def add_path(self, start: Tuple[Tuple[int, int], Direction], target: Tuple[Tuple[int, int], Direction],
-                 weight: int):
+    def add_path(
+        self,
+        start: Tuple[Tuple[int, int], Direction],
+        target: Tuple[Tuple[int, int], Direction],
+        weight: int,
+    ):
         """
          Adds a bidirectional path defined between the start and end coordinates to the map and assigns the weight to it
         example:
@@ -39,8 +45,9 @@ class Planet:
         self.paths.add((start, target, weight))
         self.paths.add((target, start, weight))
 
-    def get_paths(self) -> Dict[Tuple[int, int], Dict[
-        Direction, Tuple[Tuple[int, int], Direction, Weight]]]:
+    def get_paths(
+        self
+    ) -> Dict[Tuple[int, int], Dict[Direction, Tuple[Tuple[int, int], Direction, Weight]]]:
         """
         Returns all paths
         example:
@@ -65,8 +72,9 @@ class Planet:
             path_dict[path[0][0]][path[0][1]] = (path[1][0], path[1][1], path[2])
         return path_dict
 
-    def shortest_path(self, start: Tuple[int, int], target: Tuple[int, int]) -> Optional[
-                        List[Tuple[Tuple[int, int], Direction]]]:
+    def shortest_path(
+        self, start: Tuple[int, int], target: Tuple[int, int]
+    ) -> Optional[List[Tuple[Tuple[int, int], Direction]]]:
         """
         Returns a shortest path between two nodes
         examples:
@@ -138,4 +146,3 @@ class Planet:
                         best_direction = direction
             path.append((tup, best_direction))
         return path
-
