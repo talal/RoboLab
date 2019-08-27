@@ -1,10 +1,11 @@
 import json
 from enum import Enum, unique
-from typing import Tuple
+from typing import Tuple, Any
 
 from paho.mqtt.client import connack_string
 
-from planet.planet import Direction, PathStatus
+from logger import get_logger
+from utils.common import Direction, PathStatus
 
 
 @unique
@@ -31,7 +32,7 @@ class Communication:
     thereby solve the task according to the specifications
     """
 
-    def __init__(self, mqtt_client, logger):
+    def __init__(self, mqtt_client):
         """
         Initializes communication module, connect to server, subscribe, etc.
         :param mqtt_client: paho.mqtt.client.Client
@@ -41,14 +42,13 @@ class Communication:
         self.client = mqtt_client
         self.client.on_message = self.safe_on_message_handler
         self.client.on_connect = self.__on_connect
-        self.logger = logger
+        self.logger = get_logger(__name__)
 
         # Add your client setup here
         self.username = "217"
         self.password = "H8zbos646n"
         self.message_queue = list()
         self.explorer_topic = f"explorer/{self.username}"
-        self.planet_name = ""
         self.planet_topic = ""
 
         self.client.username_pw_set(self.username, password=self.password)
@@ -151,11 +151,11 @@ class Communication:
             "from": "client",
             "type": MessageType.PATH.value,
             "payload": {
-                "startX": str(start[0][0]),
-                "startY": str(start[0][1]),
+                "startX": start[0][0],
+                "startY": start[0][1],
                 "startDirection": start[1].value,
-                "endX": str(end[0][0]),
-                "endY": str(end[0][1]),
+                "endX": end[0][0],
+                "endY": end[0][1],
                 "endDirection": end[1].value,
                 "pathStatus": status.value,
             },
@@ -167,8 +167,8 @@ class Communication:
             "from": "client",
             "type": MessageType.PATH_SELECT.value,
             "payload": {
-                "startX": str(start[0][0]),
-                "startY": str(start[0][1]),
+                "startX": start[0][0],
+                "startY": start[0][1],
                 "startDirection": start[1].value,
             },
         }
@@ -192,7 +192,7 @@ class Communication:
 
     #  ====================  Message Handling  ====================  #
 
-    def handle(self):
+    def handle(self) -> Tuple[Any, ...]:
         msg = self.message_queue.pop(0)
         print(json.dumps(msg, indent=2))  # TODO: remove this before final push
         if msg["from"] == "debug":
@@ -205,10 +205,10 @@ class Communication:
             name = payload["planetName"]
             self.planet_topic = f"planet/{name}/{self.username}"
             self.subscribe_to_topic(self.planet_topic)
-            return msg_type, ((payload["startX"], payload["startY"]), Direction.NORTH)
+            return msg_type, (payload["startX"], payload["startY"])
 
         if msg_type == MessageType.TARGET:
-            return msg_type, ((payload["targetX"], payload["targetY"]), None)
+            return msg_type, (payload["targetX"], payload["targetY"])
 
         if msg_type == MessageType.PATH_SELECT:
             return msg_type, Direction(payload["startDirection"])
