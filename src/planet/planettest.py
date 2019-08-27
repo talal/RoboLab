@@ -2,7 +2,8 @@
 
 import unittest
 
-from planet.planet import Direction, Planet
+from planet import Planet
+from utils.common import Direction
 
 
 class ExampleTestPlanet(unittest.TestCase):
@@ -155,8 +156,9 @@ class RoboLabPlanetTests(unittest.TestCase):
         Result: Target is reachable
         """
         expected = [((0, 0), Direction.NORTH), ((0, 1), Direction.NORTH)]
+        expected2 = [((0, 0), Direction.WEST), ((0, 1), Direction.NORTH)]
         got = self.planet.shortest_path((0, 0), (0, 2))
-        self.assertEqual(got, expected)
+        self.assertTrue((got == expected) or (got == expected2))
 
     def test_target_not_reachable_with_loop(self):
         """
