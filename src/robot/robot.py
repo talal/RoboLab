@@ -86,10 +86,11 @@ class Robot:
 
             if current_coordinates in self.blocked_paths:
                 if target_direction in self.blocked_paths[current_coordinates]:
-                    if target_direction in self.scanned_directions[current_coordinates]:
-                        i = self.scanned_directions[current_coordinates].index(target_direction)
-                        del self.scanned_directions[current_coordinates][i]
-                        continue
+                    if current_coordinates in self.scanned_directions:
+                        if target_direction in self.scanned_directions[current_coordinates]:
+                            i = self.scanned_directions[current_coordinates].index(target_direction)
+                            del self.scanned_directions[current_coordinates][i]
+                    continue
 
             if target_direction != self.odometry.current_direction:
                 print(
@@ -102,7 +103,7 @@ class Robot:
                     self.odometry.current_direction, target_direction
                 )
 
-            if target_direction in self.scanned_directions[current_coordinates]:
+            if current_coordinates in self.scanned_directions:
                 if target_direction in self.scanned_directions[current_coordinates]:
                     i = self.scanned_directions[current_coordinates].index(target_direction)
                     del self.scanned_directions[current_coordinates][i]
