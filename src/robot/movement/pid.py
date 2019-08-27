@@ -1,8 +1,6 @@
 from logger import get_logger
-from robot.movement.motor import MotorController
+from robot.movement.motor import MotorController, DEFAULT_SPEED, ROTATION_SPEED
 from robot.sensors.color import ColorSensor
-
-logger = get_logger(__name__)
 
 
 class PIDController:
@@ -13,6 +11,7 @@ class PIDController:
     """
 
     def __init__(self):
+        self.logger = get_logger(__name__)
         self.offset = 0
         self.tp = 0
         self.kp = 0
@@ -21,38 +20,37 @@ class PIDController:
         self.integral = 0
         self.last_error = 0
 
-    def calibrate(self, drive_speed):
+    def calibrate(self):
+        drive_speed = DEFAULT_SPEED
         mc = MotorController()
         cs = ColorSensor()
         color_intensity_list = list()
 
         def rotate_and_append_light_intensity(rotate_func):
-            rotate_func(angle=30, speed=180)
+            rotate_func(angle=30, speed=ROTATION_SPEED)
             while mc.are_running():
                 color_intensity_list.append(cs.get_reflected_color_intensity())
-            rotate_func(angle=(-1 * 30), speed=180)  # go back to the starting position
+            rotate_func(angle=(-1 * 30), speed=ROTATION_SPEED)  # go back to the starting position
             mc.wait_while_running()
 
         rotate_and_append_light_intensity(mc.rotate_clockwise)
         rotate_and_append_light_intensity(mc.rotate_counter_clockwise)
 
-        # TODO: do test runs on the big planet and fine-tune if needed
-        self.adjustment_constant = min(color_intensity_list)
         min_intensity = min(color_intensity_list)
         max_intensity = max(color_intensity_list)
         critical_gain = (drive_speed - (-1 * drive_speed)) / (max_intensity - min_intensity)
 
         self.offset = int(((max_intensity + min_intensity) * 0.5))
         self.tp = drive_speed
-        self.kp = 0.2 * critical_gain
-        self.ki = 0.125 * critical_gain
+        self.kp = 0.16 * critical_gain
+        self.ki = 0.14 * critical_gain
         self.kd = 0.3 * critical_gain
 
-        logger.debug(
-            f"calibrating PID controller using color intensity values = {color_intensity_list}"
+        self.logger.debug(
+            f"PID controller: calibrating using color intensity values={color_intensity_list}, min={min_intensity}, max={max_intensity}"
         )
-        logger.debug(
-            f"PID controller constants are offset={self.offset}, tp={self.tp}, kp={self.kp}, ki={self.ki}, kd={self.kd}"
+        self.logger.debug(
+            f"PID controller: constants are offset={self.offset}, tp={self.tp}, kp={self.kp}, ki={self.ki}, kd={self.kd}"
         )
 
     def calculate_p_component(self, error):
@@ -66,7 +64,6 @@ class PIDController:
             self.integral = 0
             return 0
         else:
-            # TODO: integral dampening is not finalized, it might require fine-tuning
             self.integral = ((2 / 3) * self.integral) + error
 
         # use the updated integral to calculate turn component
@@ -91,4 +88,4 @@ class PIDController:
     def reset_id_components(self):
         self.integral = 0
         self.last_error = 0
-        logger.debug("PID controller's integral and last error values have been reset")
+        self.logger.debug("PID controller: integral and last error values have been reset")

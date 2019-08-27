@@ -47,7 +47,7 @@ class MotorController:
     """
 
     def __init__(self):
-        self.left = Motor(ev3.OUTPUT_A)
+        self.left = Motor(ev3.OUTPUT_B)
         self.right = Motor(ev3.OUTPUT_D)
         self.positions: List[Tuple[int, int]] = list()
 
@@ -81,7 +81,8 @@ class MotorController:
         self.positions.append(positions)
 
     def get_positions_list(self) -> List[Tuple[int, int]]:
-        return self.positions
+        # return a copy so that a later list.clear() will not give us any surprises
+        return self.positions.copy()
 
     def clear_positions_list(self):
         self.positions.clear()
