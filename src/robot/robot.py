@@ -183,7 +183,7 @@ class Robot:
         if len(possible_directions) > 0:
             t = possible_directions.pop()
             return t
-        else:
+        elif (len(self.unfinished_nodes) != 0) and (current_coordinates in self.unfinished_nodes):
             i = self.unfinished_nodes.index(current_coordinates)
             del self.unfinished_nodes[i]
 
